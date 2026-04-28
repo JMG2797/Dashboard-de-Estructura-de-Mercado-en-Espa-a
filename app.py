@@ -590,6 +590,8 @@ with st.sidebar:
     st.markdown("### 📊 Navegación")
     sector_options = ["Vista Comparativa"] + list(SECTORS.keys())
     selected = st.radio("Selecciona sector", sector_options, label_visibility="collapsed")
+    if selected not in sector_options:
+        selected = sector_options[0]
 
     st.markdown("---")
     st.markdown("### Conceptos clave")
@@ -617,7 +619,7 @@ st.markdown("""
 
 # COMPARATIVE VIEW
 
-if selected == " Vista Comparativa":
+if selected == "Vista Comparativa":
 
     # Summary metrics
     all_hhis = {k: calc_hhi(v["companies"]) for k, v in SECTORS.items()}

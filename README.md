@@ -1,4 +1,3 @@
-# Dashboard-de-Estructura-de-Mercado-en-España
 # Estructura de Mercado — España
 ## Dashboard de Análisis Sectorial · Economía I
 
@@ -20,7 +19,7 @@ Dashboard interactivo con datos reales (2024-2025) sobre la estructura de mercad
 
 ---
 
-## 🚀 Ejecución local
+## Ejecución local
 
 ```bash
 # 1. Instalar dependencias
@@ -34,10 +33,12 @@ streamlit run app.py
 
 ## 🌐 Despliegue en Streamlit Cloud
 
-1. Sube `app.py` y `requirements.txt` a un repositorio de GitHub
+1. Sube `app.py`, `requirements.txt` y la carpeta `.streamlit` a un repositorio de GitHub
 2. Ve a [share.streamlit.io](https://share.streamlit.io)
 3. Conecta tu repo y selecciona `app.py` como archivo principal
 4. ¡Listo! Se despliega automáticamente
+
+> El archivo `.streamlit/config.toml` configura el modo `headless` y un tema oscuro compatible con el diseño del dashboard.
 
 ---
 

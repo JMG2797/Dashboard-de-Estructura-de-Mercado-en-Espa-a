@@ -31,7 +31,7 @@ streamlit run app.py
 
 ---
 
-## 🌐 Despliegue en Streamlit Cloud
+## Despliegue en Streamlit Cloud
 
 1. Sube `app.py`, `requirements.txt` y la carpeta `.streamlit` a un repositorio de GitHub
 2. Ve a [share.streamlit.io](https://share.streamlit.io)
@@ -40,10 +40,10 @@ streamlit run app.py
 
 > El archivo `.streamlit/config.toml` configura el modo `headless` y un tema oscuro compatible con el diseño del dashboard.
 
----
+> Si quieres que el dashboard cargue datos reales cada vez que se recarga, añade un secreto en Streamlit Cloud llamado `DATA_FEED_URL` con la URL de un JSON válido que devuelva un objeto con la clave `sectors`. Opcionalmente también puedes usar un archivo local `sector_data.json` en el repositorio.
 
-## 🔄 Actualización automática de datos (futuro)
 
+## Actualización automática de datos 
 Para conectar fuentes en tiempo real, puedes añadir funciones de fetch:
 
 ```python

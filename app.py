@@ -1,7 +1,7 @@
 """
-Estructura de Mercado — España
-Dashboard de Análisis Sectorial · Economía I
-Datos reales 2024/2025
+Estructura de mercado en España
+Dashboard de análisis sectorial · Economía I
+Datos reales 2024/25
 
 Fuentes: CNMC, AENA, NIQ, Worldpanel, ICEA, Unespa, Banco de España, REE, PwC
 
@@ -158,7 +158,7 @@ def format_last_refresh() -> str:
 def refresh_controls(container):
     init_refresh_state()
     container.markdown("#### 🔄")
-    if container.button("Actualizar datos ahora"):
+    if container.button("Actualiza Datos"):
         st.session_state.last_refresh_ts = time.time()
         st.rerun()
 
@@ -233,8 +233,7 @@ def load_sector_data(base_data: dict) -> dict:
 
 # DATA
 SECTORS = {
-    "📡 Telecomunicaciones": {
-        "icon": "📡",
+    "Telecomunicaciones": {
         "year": "2025",
         "source": "CNMC · MobileWorldLive · Nae",
         "total_market": "63M líneas móviles",
@@ -264,8 +263,7 @@ SECTORS = {
         },
         "interpretation": "El HHI más alto (~2.850) refleja la fusión Orange+Más Móvil. Con CR₃ del 86%, el sector opera como un oligopolio de facto con barreras de entrada por infraestructura. La entrada de Digi como cuarto operador es la principal fuerza competitiva.",
     },
-    "🏦 Banca": {
-        "icon": "🏦",
+    "Banca": {
         "year": "2025",
         "source": "Banco de España · Informes anuales · EBA",
         "total_market": "~€2.4T activos totales",
@@ -299,8 +297,7 @@ SECTORS = {
         },
         "interpretation": "La consolidación post-2008 (de 55 a ~11 entidades) ha creado un oligopolio bancario con HHI ~1.600. Las barreras regulatorias limitan la entrada, pero la banca digital y las fintech podrían disrumpir el equilibrio actual.",
     },
-    "⚡ Energía Eléctrica": {
-        "icon": "⚡",
+    "Energía Eléctrica": {
         "year": "2024-2025",
         "source": "CNMC · REE · PwC",
         "total_market": "30.3M puntos de suministro",
@@ -322,8 +319,7 @@ SECTORS = {
         "sub_market": None,
         "interpretation": "El mercado eléctrico español presenta un oligopolio en generación y distribución, pero alta competencia en comercialización (534 actores). La transición energética y la irrupción de renovables están alterando las dinámicas de poder. El precio marginalista amplifica la volatilidad.",
     },
-    "🛒 Distribución Alimentaria": {
-        "icon": "🛒",
+    "Distribución Alimentaria": {
         "year": "2025",
         "source": "NIQ · Worldpanel by Numerator",
         "total_market": "€131.000M facturación total",
@@ -349,8 +345,7 @@ SECTORS = {
         "sub_market": None,
         "interpretation": "Caso atípico: Mercadona (29.5%) genera un HHI bajo por la fragmentación del resto, pero su poder de mercado real es enorme. El índice de Lerner subestima su capacidad de fijar precios dada su estrategia de marca blanca (50% del gasto en MDD).",
     },
-    "✈️ Transporte Aéreo": {
-        "icon": "✈️",
+    "Transporte Aéreo": {
         "year": "2025",
         "source": "AENA · DGAC",
         "total_market": "~310M pasajeros/año",
@@ -375,8 +370,7 @@ SECTORS = {
         "sub_market": None,
         "interpretation": "El transporte aéreo español muestra competencia oligopolística dominada por low-cost (61.8%). Ryanair lidera pese a conflictos con AENA por tasas. La cola larga de 'Otras' (34%) refleja la fragmentación del tráfico internacional — muchas aerolíneas con cuotas pequeñas.",
     },
-    "🛡️ Seguros": {
-        "icon": "🛡️",
+    "Seguros": {
         "year": "2025",
         "source": "ICEA · Unespa · IPMARK",
         "total_market": "€85.879M en primas",
@@ -510,7 +504,7 @@ def make_bar(companies: list[dict], metric: str = "share", title: str = "") -> g
 
 
 def make_scatter_cr_hhi(sectors_data: dict) -> go.Figure:
-    names, hhis, cr3s, colors, icons = [], [], [], [], []
+    names, hhis, cr3s, colors = [], [], [], []
     for key, data in sectors_data.items():
         hhi = calc_hhi(data["companies"])
         cr3 = calc_cr(data["companies"], 3)
@@ -519,7 +513,6 @@ def make_scatter_cr_hhi(sectors_data: dict) -> go.Figure:
         hhis.append(hhi)
         cr3s.append(cr3)
         colors.append(col)
-        icons.append(data["icon"])
 
     fig = go.Figure()
 
@@ -540,7 +533,7 @@ def make_scatter_cr_hhi(sectors_data: dict) -> go.Figure:
         x=hhis, y=cr3s,
         mode="markers+text",
         marker=dict(size=20, color=colors, line=dict(width=2, color="#0f172a")),
-        text=[f"{ic} {n.split(' ', 1)[1] if ' ' in n else n}" for ic, n in zip(icons, names)],
+        text=names,
         textposition="top center",
         textfont=dict(size=11, color="#e2e8f0"),
         hovertemplate="<b>%{text}</b><br>HHI: %{x:,.0f}<br>CR₃: %{y:.1f}%<extra></extra>",

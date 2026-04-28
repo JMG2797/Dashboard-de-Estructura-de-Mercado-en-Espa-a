@@ -1,14 +1,17 @@
 """
 Estructura de Mercado — España
 Dashboard de Análisis Sectorial · Economía I
-Datos reales 2024-2025
+Datos reales 2024/2025
 
 Fuentes: CNMC, AENA, NIQ, Worldpanel, ICEA, Unespa, Banco de España, REE, PwC
 
 Para ejecutar:
-    pip install streamlit plotly pandas numpy
+    pip install -r requirements.txt
     streamlit run app.py
 """
+
+import time
+from datetime import datetime
 
 import streamlit as st
 import plotly.graph_objects as go
@@ -26,9 +29,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# ─────────────────────────────────────────────
 # CUSTOM CSS
-# ─────────────────────────────────────────────
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap');
@@ -140,6 +141,32 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
+
+# REFRESH CONTROL
+AUTO_REFRESH_INTERVAL = 30 * 60  # 30 minutos
+
+def init_refresh_state() -> None:
+    if "last_refresh_ts" not in st.session_state:
+        st.session_state.last_refresh_ts = time.time()
+
+
+def format_last_refresh() -> str:
+    return datetime.fromtimestamp(st.session_state.last_refresh_ts).strftime("%d/%m/%Y %H:%M:%S")
+
+
+def refresh_controls(container):
+    init_refresh_state()
+    container.markdown("#### 🔄 Actualización")
+    if container.button("Actualizar ahora"):
+        st.session_state.last_refresh_ts = time.time()
+        st.experimental_rerun()
+
+    if time.time() - st.session_state.last_refresh_ts >= AUTO_REFRESH_INTERVAL:
+        st.session_state.last_refresh_ts = time.time()
+        st.experimental_rerun()
+
+    container.markdown(f"<span style='color:#cbd5e1;'>Última actualización: {format_last_refresh()}</span>", unsafe_allow_html=True)
+    container.markdown("<span style='color:#94a3b8;font-size:0.85rem;'>Actualización automática cada 30 minutos.</span>", unsafe_allow_html=True)
 
 # DATA
 SECTORS = {
@@ -313,10 +340,7 @@ SECTORS = {
     },
 }
 
-
-# ─────────────────────────────────────────────
 # HELPER FUNCTIONS
-# ─────────────────────────────────────────────
 def calc_hhi(companies: list[dict]) -> float:
     return sum(c["share"] ** 2 for c in companies)
 
@@ -501,11 +525,9 @@ def make_comparative_bar(sectors_data: dict) -> go.Figure:
     )
     return fig
 
-
-# ─────────────────────────────────────────────
 # SIDEBAR
-# ─────────────────────────────────────────────
 with st.sidebar:
+    refresh_controls(st)
     st.markdown("### 📊 Navegación")
     sector_options = ["🔍 Vista Comparativa"] + list(SECTORS.keys())
     selected = st.radio("Selecciona sector", sector_options, label_visibility="collapsed")
@@ -526,9 +548,7 @@ with st.sidebar:
     )
 
 
-# ─────────────────────────────────────────────
 # HEADER
-# ─────────────────────────────────────────────
 st.markdown("""
 <div class="main-header">
     <h1>Estructura de Mercado — España</h1>
@@ -536,10 +556,8 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-
-# ─────────────────────────────────────────────
 # COMPARATIVE VIEW
-# ─────────────────────────────────────────────
+
 if selected == "🔍 Vista Comparativa":
 
     # Summary metrics
@@ -698,16 +716,27 @@ else:
 
     st.dataframe(pd.DataFrame(table_data), use_container_width=True, hide_index=True)
 
-
-# ─────────────────────────────────────────────
 # FOOTER
-# ─────────────────────────────────────────────
 st.markdown("---")
 st.markdown(
     "<p style='text-align:center;color:#475569;font-size:0.75rem;'>"
-    "Estructura de Mercado — España · Economía I · "
+    "Estructura de Mercado en España · Economía I · "
     "Fuentes: CNMC, AENA, NIQ, Worldpanel, ICEA, Unespa, Banco de España, REE, PwC · "
-    "Datos 2024-2025"
+    "Datos 2024/2025"
     "</p>",
     unsafe_allow_html=True,
 )
+
+import requests
+
+def fetch_cnmc_telecom():
+    """Ejemplo: datos abiertos CNMC."""
+    url = "https://data.cnmc.es/api/..."  # endpoint real
+    response = requests.get(url)
+    return response.json()
+
+def fetch_ine_data(table_id):
+    """API del INE (INEbase)."""
+    url = f"https://servicios.ine.es/wstempus/js/ES/DATOS_TABLA/{table_id}"
+    response = requests.get(url)
+    return response.json()

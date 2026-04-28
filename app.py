@@ -30,116 +30,164 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+DEFAULT_THEME = {
+    "header_start": "#0f172a",
+    "header_mid": "#1e293b",
+    "header_end": "#0f172a",
+    "card_background": "#1e293b",
+    "border_color": "#334155",
+    "text_color": "#cbd5e1",
+    "muted_text_color": "#94a3b8",
+    "sidebar_background": "#0f172a",
+    "accent_color": "#3b82f6",
+    "highlight_color": "#60a5fa",
+    "metric_value_color": "#f1f5f9",
+}
+
+
+def init_theme_state() -> None:
+    for key, value in DEFAULT_THEME.items():
+        if key not in st.session_state:
+            st.session_state[key] = value
+
+
+def reset_theme() -> None:
+    for key, value in DEFAULT_THEME.items():
+        st.session_state[key] = value
+
+
+def load_theme_colors() -> dict:
+    init_theme_state()
+    return {key: st.session_state[key] for key in DEFAULT_THEME}
+
+
+def theme_controls(container):
+    with container.expander("🎨 Personaliza Colores", expanded=True):
+        st.session_state.header_start = container.color_picker("Inicio degradado cabecera", st.session_state.header_start)
+        st.session_state.header_mid = container.color_picker("Centro degradado cabecera", st.session_state.header_mid)
+        st.session_state.header_end = container.color_picker("Final degradado cabecera", st.session_state.header_end)
+        st.session_state.card_background = container.color_picker("Color tarjetas", st.session_state.card_background)
+        st.session_state.border_color = container.color_picker("Color bordes", st.session_state.border_color)
+        st.session_state.text_color = container.color_picker("Color texto principal", st.session_state.text_color)
+        st.session_state.muted_text_color = container.color_picker("Color texto secundario", st.session_state.muted_text_color)
+        st.session_state.sidebar_background = container.color_picker("Fondo barra lateral", st.session_state.sidebar_background)
+        st.session_state.accent_color = container.color_picker("Color acento", st.session_state.accent_color)
+        st.session_state.highlight_color = container.color_picker("Color destacado", st.session_state.highlight_color)
+        container.button("Restablecer colores", on_click=reset_theme)
+
+
+theme = load_theme_colors()
+
 # CUSTOM CSS
-st.markdown("""
+st.markdown(f"""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
-    .stApp {
+    .stApp {{
         font-family: 'DM Sans', sans-serif;
-    }
+    }}
 
-    .main-header {
-        background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+    .main-header {{
+        background: linear-gradient(135deg, {theme['header_start']} 0%, {theme['header_mid']} 50%, {theme['header_end']} 100%);
         padding: 2rem 2.5rem;
         border-radius: 16px;
         margin-bottom: 1.5rem;
-        border: 1px solid #334155;
-    }
-    .main-header h1 {
-        color: #f1f5f9;
+        border: 1px solid {theme['border_color']};
+    }}
+    .main-header h1 {{
+        color: {theme['metric_value_color']};
         font-size: 2rem;
         font-weight: 800;
         margin: 0;
         letter-spacing: -0.03em;
-    }
-    .main-header p {
-        color: #94a3b8;
+    }}
+    .main-header p {{
+        color: {theme['muted_text_color']};
         font-size: 0.9rem;
         margin: 0.3rem 0 0;
-    }
+    }}
 
-    .metric-box {
-        background: #1e293b;
-        border: 1px solid #334155;
+    .metric-box {{
+        background: {theme['card_background']};
+        border: 1px solid {theme['border_color']};
         border-radius: 12px;
         padding: 1.1rem 1.3rem;
         text-align: center;
-    }
-    .metric-box .label {
-        color: #64748b;
+    }}
+    .metric-box .label {{
+        color: {theme['muted_text_color']};
         font-size: 0.7rem;
         text-transform: uppercase;
         letter-spacing: 0.06em;
         font-weight: 600;
-    }
-    .metric-box .value {
-        color: #f1f5f9;
+    }}
+    .metric-box .value {{
+        color: {theme['metric_value_color']};
         font-size: 1.6rem;
         font-weight: 800;
         line-height: 1.2;
         margin-top: 0.2rem;
-    }
-    .metric-box .sub {
-        color: #94a3b8;
+    }}
+    .metric-box .sub {{
+        color: {theme['muted_text_color']};
         font-size: 0.75rem;
         margin-top: 0.15rem;
-    }
+    }}
 
-    .insight-card {
-        background: #1e293b;
-        border: 1px solid #334155;
-        border-left: 3px solid #3b82f6;
+    .insight-card {{
+        background: {theme['card_background']};
+        border: 1px solid {theme['border_color']};
+        border-left: 3px solid {theme['accent_color']};
         border-radius: 8px;
         padding: 0.8rem 1rem;
         margin-bottom: 0.5rem;
-        color: #cbd5e1;
+        color: {theme['text_color']};
         font-size: 0.85rem;
         line-height: 1.5;
-    }
+    }}
 
-    .sector-badge {
+    .sector-badge {{
         display: inline-block;
         padding: 0.25rem 0.8rem;
         border-radius: 20px;
         font-size: 0.75rem;
         font-weight: 700;
-    }
+    }}
 
-    .interpretation-box {
-        background: #1e293b;
-        border: 1px solid #334155;
+    .interpretation-box {{
+        background: {theme['card_background']};
+        border: 1px solid {theme['border_color']};
         border-radius: 10px;
         padding: 1.2rem;
         margin-bottom: 0.8rem;
-    }
-    .interpretation-box h4 {
+    }}
+    .interpretation-box h4 {{
         margin: 0 0 0.4rem;
         font-size: 0.95rem;
         font-weight: 700;
-    }
-    .interpretation-box p {
-        color: #94a3b8;
+    }}
+    .interpretation-box p {{
+        color: {theme['muted_text_color']};
         font-size: 0.82rem;
         line-height: 1.6;
         margin: 0;
-    }
+    }}
 
-    div[data-testid="stSidebar"] {
-        background: #0f172a;
-    }
+    div[data-testid="stSidebar"] {{
+        background: {theme['sidebar_background']};
+    }}
     div[data-testid="stSidebar"] .stMarkdown p,
-    div[data-testid="stSidebar"] .stMarkdown li {
-        color: #cbd5e1;
-    }
+    div[data-testid="stSidebar"] .stMarkdown li {{
+        color: {theme['text_color']};
+    }}
 
-    .stTabs [data-baseweb="tab-list"] {
+    .stTabs [data-baseweb="tab-list"] {{
         gap: 0;
-    }
-    .stTabs [data-baseweb="tab"] {
+    }}
+    .stTabs [data-baseweb="tab"] {{
         padding: 0.6rem 1.2rem;
         font-weight: 600;
-    }
+    }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -166,8 +214,14 @@ def refresh_controls(container):
         st.session_state.last_refresh_ts = time.time()
         st.rerun()
 
-    container.markdown(f"<span style='color:#cbd5e1;'>Última actualización: {format_last_refresh()}</span>", unsafe_allow_html=True)
-    container.markdown("<span style='color:#94a3b8;font-size:0.85rem;'>Actualización automática cada 30 minutos.</span>", unsafe_allow_html=True)
+    container.markdown(
+        f"<span style='color:{theme['text_color']};'>Última actualización: {format_last_refresh()}</span>",
+        unsafe_allow_html=True,
+    )
+    container.markdown(
+        f"<span style='color:{theme['muted_text_color']};font-size:0.85rem;'>Actualización automática cada 30 minutos.</span>",
+        unsafe_allow_html=True,
+    )
 
 DATA_FILE = "sector_data.json"
 DATA_FEED_URL = st.secrets.get("DATA_FEED_URL", None)
@@ -436,7 +490,7 @@ SECTORS = load_sector_data(SECTORS)
 CHART_LAYOUT = dict(
     paper_bgcolor="rgba(0,0,0,0)",
     plot_bgcolor="rgba(0,0,0,0)",
-    font=dict(family="DM Sans, sans-serif", color="#cbd5e1"),
+    font=dict(family="DM Sans, sans-serif", color=theme['text_color']),
     margin=dict(l=20, r=20, t=40, b=20),
 )
 
@@ -454,12 +508,12 @@ def make_donut(companies: list[dict], title: str = "Cuota de Mercado") -> go.Fig
     ))
     hhi = calc_hhi(companies)
     fig.add_annotation(
-        text=f"<b>HHI</b><br><span style='font-size:20px;color:#60a5fa'>{hhi:,.0f}</span>",
-        showarrow=False, font=dict(size=12, color="#94a3b8"),
+        text=f"<b>HHI</b><br><span style='font-size:20px;color:{theme['highlight_color']}'>{hhi:,.0f}</span>",
+        showarrow=False, font=dict(size=12, color=theme['muted_text_color']),
     )
     fig.update_layout(
         **CHART_LAYOUT,
-        title=dict(text=title, font=dict(size=14, color="#94a3b8")),
+        title=dict(text=title, font=dict(size=14, color=theme['muted_text_color'])),
         showlegend=False,
         height=360,
     )
@@ -492,11 +546,11 @@ def make_bar(companies: list[dict], metric: str = "share", title: str = "") -> g
     ))
     fig.update_layout(
         **CHART_LAYOUT,
-        title=dict(text=title, font=dict(size=14, color="#94a3b8")),
+        title=dict(text=title, font=dict(size=14, color=theme['muted_text_color'])),
         height=max(220, len(filtered) * 36 + 80),
         xaxis=dict(
-            title=x_title, gridcolor="#1e293b", zeroline=False,
-            title_font=dict(size=11), tickfont=dict(size=10),
+            title=x_title, gridcolor=theme['border_color'], zeroline=False,
+            title_font=dict(size=11, color=theme['text_color']), tickfont=dict(size=10, color=theme['text_color']),
         ),
         yaxis=dict(tickfont=dict(size=11)),
     )
@@ -586,6 +640,7 @@ def make_comparative_bar(sectors_data: dict) -> go.Figure:
 
 # SIDEBAR
 with st.sidebar:
+    theme_controls(st)
     refresh_controls(st)
     st.markdown("### 📊 Navegación")
     sector_options = ["Vista Comparativa"] + list(SECTORS.keys())

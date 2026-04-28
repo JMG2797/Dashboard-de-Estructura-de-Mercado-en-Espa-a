@@ -10,18 +10,19 @@ Para ejecutar:
     streamlit run app.py
 """
 
+import json
 import time
 from datetime import datetime
+from pathlib import Path
 
+import requests
 import streamlit as st
 import plotly.graph_objects as go
 import plotly.express as px
 import pandas as pd
 import numpy as np
 
-# ─────────────────────────────────────────────
 # CONFIG
-# ─────────────────────────────────────────────
 st.set_page_config(
     page_title="Estructura de Mercado — España",
     page_icon="📊",
@@ -156,17 +157,79 @@ def format_last_refresh() -> str:
 
 def refresh_controls(container):
     init_refresh_state()
-    container.markdown("#### 🔄 Actualización")
-    if container.button("Actualizar ahora"):
+    container.markdown("#### 🔄")
+    if container.button("Actualizar datos ahora"):
         st.session_state.last_refresh_ts = time.time()
-        st.experimental_rerun()
+        st.rerun()
 
     if time.time() - st.session_state.last_refresh_ts >= AUTO_REFRESH_INTERVAL:
         st.session_state.last_refresh_ts = time.time()
-        st.experimental_rerun()
+        st.rerun()
 
     container.markdown(f"<span style='color:#cbd5e1;'>Última actualización: {format_last_refresh()}</span>", unsafe_allow_html=True)
     container.markdown("<span style='color:#94a3b8;font-size:0.85rem;'>Actualización automática cada 30 minutos.</span>", unsafe_allow_html=True)
+
+DATA_FILE = "sector_data.json"
+DATA_FEED_URL = st.secrets.get("DATA_FEED_URL", None)
+
+
+def fetch_json(url: str, timeout: int = 12) -> dict:
+    response = requests.get(url, timeout=timeout)
+    response.raise_for_status()
+    return response.json()
+
+
+def load_local_sector_data() -> dict:
+    path = Path(DATA_FILE)
+    if not path.exists():
+        return {}
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        if isinstance(payload, dict):
+            return payload.get("sectors", payload)
+    except Exception:
+        pass
+    return {}
+
+
+def merge_sector_data(base: dict, source: dict) -> dict:
+    merged = {}
+    for sector, base_data in base.items():
+        merged[sector] = base_data.copy()
+        if sector not in source:
+            continue
+
+        source_data = source[sector]
+        if isinstance(source_data, dict):
+            merged[sector].update({k: v for k, v in source_data.items() if k != "companies"})
+            if isinstance(source_data.get("companies"), list):
+                live_companies = {c["name"]: c for c in source_data["companies"] if isinstance(c, dict) and c.get("name")}
+                merged_companies = []
+                for company in base_data["companies"]:
+                    match = live_companies.get(company["name"])
+                    merged_companies.append({**company, **match} if match else company)
+                for company in source_data["companies"]:
+                    if company.get("name") not in live_companies:
+                        merged_companies.append(company)
+                merged[sector]["companies"] = merged_companies
+    return merged
+
+
+def load_sector_data(base_data: dict) -> dict:
+    live_data = {}
+    if DATA_FEED_URL:
+        try:
+            payload = fetch_json(DATA_FEED_URL)
+            if isinstance(payload, dict):
+                live_data = payload.get("sectors", payload)
+        except Exception as exc:
+            st.sidebar.warning(f"No se pudieron cargar datos en vivo: {exc}")
+
+    local_data = load_local_sector_data()
+    if isinstance(local_data, dict) and local_data:
+        live_data = merge_sector_data(live_data or {}, local_data)
+
+    return merge_sector_data(base_data, live_data) if live_data else base_data
 
 # DATA
 SECTORS = {
@@ -372,6 +435,9 @@ def metric_html(label: str, value: str, sub: str = "", color: str = "#f1f5f9") -
         {sub_html}
     </div>
     """
+
+SECTORS = load_sector_data(SECTORS)
+
 # CHARTS
 CHART_LAYOUT = dict(
     paper_bgcolor="rgba(0,0,0,0)",
@@ -622,7 +688,7 @@ if selected == "🔍 Vista Comparativa":
     <div class="interpretation-box" style="border-left: 3px solid #AB47BC;">
         <h4 style="color: #AB47BC;">Índice de Lerner y Relación con HHI</h4>
         <p>
-            En competencia à la Cournot, el índice de Lerner (L = (P−CM)/P) está relacionado con el HHI
+            En competencia a la Cournot, el índice de Lerner (L = (P−CM)/P) está relacionado con el HHI
             a través de la elasticidad de la demanda: <b>L = HHI / (ε × 10.000)</b>, donde ε es la elasticidad-precio.
             Nuestras estimaciones usan ε implícita entre 2 y 4 según el sector.<br><br>
             <b>Telecom</b> (baja elasticidad, switching costs altos) → Lerner ~16%<br>
@@ -726,17 +792,3 @@ st.markdown(
     "</p>",
     unsafe_allow_html=True,
 )
-
-import requests
-
-def fetch_cnmc_telecom():
-    """Ejemplo: datos abiertos CNMC."""
-    url = "https://data.cnmc.es/api/..."  # endpoint real
-    response = requests.get(url)
-    return response.json()
-
-def fetch_ine_data(table_id):
-    """API del INE (INEbase)."""
-    url = f"https://servicios.ine.es/wstempus/js/ES/DATOS_TABLA/{table_id}"
-    response = requests.get(url)
-    return response.json()

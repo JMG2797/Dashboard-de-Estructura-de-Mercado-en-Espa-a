@@ -29,7 +29,7 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
-
+# Personaliza el tema de colores editando el diccionario DEFAULT_THEME. Puedes cambiar los valores hexadecimales para adaptar la apariencia a tu gusto.
 DEFAULT_THEME = {
     "header_start": "#0f172a",
     "header_mid": "#1e293b",
@@ -44,39 +44,9 @@ DEFAULT_THEME = {
     "metric_value_color": "#f1f5f9",
 }
 
+# Personaliza los colores directamente en el código editando DEFAULT_THEME.
 
-def init_theme_state() -> None:
-    for key, value in DEFAULT_THEME.items():
-        if key not in st.session_state:
-            st.session_state[key] = value
-
-
-def reset_theme() -> None:
-    for key, value in DEFAULT_THEME.items():
-        st.session_state[key] = value
-
-
-def load_theme_colors() -> dict:
-    init_theme_state()
-    return {key: st.session_state[key] for key in DEFAULT_THEME}
-
-
-def theme_controls(container):
-    with container.expander("🎨 Personaliza Colores", expanded=True):
-        st.session_state.header_start = container.color_picker("Inicio degradado cabecera", st.session_state.header_start)
-        st.session_state.header_mid = container.color_picker("Centro degradado cabecera", st.session_state.header_mid)
-        st.session_state.header_end = container.color_picker("Final degradado cabecera", st.session_state.header_end)
-        st.session_state.card_background = container.color_picker("Color tarjetas", st.session_state.card_background)
-        st.session_state.border_color = container.color_picker("Color bordes", st.session_state.border_color)
-        st.session_state.text_color = container.color_picker("Color texto principal", st.session_state.text_color)
-        st.session_state.muted_text_color = container.color_picker("Color texto secundario", st.session_state.muted_text_color)
-        st.session_state.sidebar_background = container.color_picker("Fondo barra lateral", st.session_state.sidebar_background)
-        st.session_state.accent_color = container.color_picker("Color acento", st.session_state.accent_color)
-        st.session_state.highlight_color = container.color_picker("Color destacado", st.session_state.highlight_color)
-        container.button("Restablecer colores", on_click=reset_theme)
-
-
-theme = load_theme_colors()
+theme = DEFAULT_THEME.copy()
 
 # CUSTOM CSS
 st.markdown(f"""
@@ -640,7 +610,6 @@ def make_comparative_bar(sectors_data: dict) -> go.Figure:
 
 # SIDEBAR
 with st.sidebar:
-    theme_controls(st)
     refresh_controls(st)
     st.markdown("### 📊 Navegación")
     sector_options = ["Vista Comparativa"] + list(SECTORS.keys())

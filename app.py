@@ -52,7 +52,7 @@ DARK_THEME = {
     "header_end": "#111827",
     "card_background": "#0f172a",
     "border_color": "#334155",
-    "text_color": "#e2e8f",
+    "text_color": "#e2e8f0",
     "muted_text_color": "#94a3b8",
     "sidebar_background": "#111827",
     "accent_color": "#38bdf8",

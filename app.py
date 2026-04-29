@@ -186,26 +186,26 @@ st.markdown(f"""
         padding: 0.6rem 1.2rem;
         font-weight: 600;
     }}
-    body, .stApp, .main, .block-container, .css-1d391kg {
+    body, .stApp, .main, .block-container, .css-1d391kg {{
         background-color: {theme['header_start']} !important;
         color: {theme['text_color']} !important;
-    }
+    }}
 
-    .css-1avcm0n, .css-1d391kg, .css-10trblm, .css-1n76f08, .css-1lcbmhc {
+    .css-1avcm0n, .css-1d391kg, .css-10trblm, .css-1n76f08, .css-1lcbmhc {{
         background-color: {theme['header_start']} !important;
-    }
+    }}
 
-    div[data-testid="stDataFrame"] table {
+    div[data-testid="stDataFrame"] table {{
         background-color: {theme['card_background']} !important;
         color: {theme['text_color']} !important;
         border-color: {theme['border_color']} !important;
-    }
+    }}
 
     div[data-testid="stDataFrame"] th,
-    div[data-testid="stDataFrame"] td {
+    div[data-testid="stDataFrame"] td {{
         border-color: {theme['border_color']} !important;
         color: {theme['text_color']} !important;
-    }</style>
+    }}</style>
 """, unsafe_allow_html=True)
 
 # REFRESH CONTROL

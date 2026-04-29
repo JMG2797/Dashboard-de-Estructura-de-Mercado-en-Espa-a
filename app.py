@@ -46,7 +46,35 @@ DEFAULT_THEME = {
 
 # Personaliza los colores directamente en el código editando DEFAULT_THEME.
 
-theme = DEFAULT_THEME.copy()
+DARK_THEME = {
+    "header_start": "#111827",
+    "header_mid": "#1f2937",
+    "header_end": "#111827",
+    "card_background": "#0f172a",
+    "border_color": "#334155",
+    "text_color": "#e2e8f",
+    "muted_text_color": "#94a3b8",
+    "sidebar_background": "#111827",
+    "accent_color": "#38bdf8",
+    "highlight_color": "#60a5fa",
+    "metric_value_color": "#f8fafc",
+}
+
+if "theme_mode" not in st.session_state:
+    st.session_state.theme_mode = "Claro"
+
+theme_mode = st.sidebar.selectbox(
+    "Modo de visualización",
+    ["Claro", "Noche"],
+    index=0 if st.session_state.theme_mode == "Claro" else 1,
+    label_visibility="collapsed",
+)
+st.session_state.theme_mode = theme_mode
+
+theme_icon = "🌙" if theme_mode == "Noche" else "☀️"
+st.sidebar.markdown(f"**{theme_icon} {theme_mode}**", unsafe_allow_html=True)
+
+theme = DARK_THEME.copy() if theme_mode == "Noche" else DEFAULT_THEME.copy()
 
 # CUSTOM CSS
 st.markdown(f"""
@@ -158,7 +186,26 @@ st.markdown(f"""
         padding: 0.6rem 1.2rem;
         font-weight: 600;
     }}
-</style>
+    body, .stApp, .main, .block-container, .css-1d391kg {
+        background-color: {theme['header_start']} !important;
+        color: {theme['text_color']} !important;
+    }
+
+    .css-1avcm0n, .css-1d391kg, .css-10trblm, .css-1n76f08, .css-1lcbmhc {
+        background-color: {theme['header_start']} !important;
+    }
+
+    div[data-testid="stDataFrame"] table {
+        background-color: {theme['card_background']} !important;
+        color: {theme['text_color']} !important;
+        border-color: {theme['border_color']} !important;
+    }
+
+    div[data-testid="stDataFrame"] th,
+    div[data-testid="stDataFrame"] td {
+        border-color: {theme['border_color']} !important;
+        color: {theme['text_color']} !important;
+    }</style>
 """, unsafe_allow_html=True)
 
 # REFRESH CONTROL
@@ -193,8 +240,18 @@ def refresh_controls(container):
         unsafe_allow_html=True,
     )
 
-DATA_FILE = "sector_data.json"
+DATA_FILE = Path(__file__).resolve().parent / "sector_data.json"
 DATA_FEED_URL = st.secrets.get("DATA_FEED_URL", None)
+
+
+def normalize_sector_payload(payload) -> dict:
+    if not isinstance(payload, dict):
+        return {}
+    if "sectors" in payload and isinstance(payload["sectors"], dict):
+        return payload["sectors"]
+    if all(isinstance(value, dict) for value in payload.values()):
+        return payload
+    return {}
 
 
 def fetch_json(url: str, timeout: int = 12) -> dict:
@@ -204,38 +261,62 @@ def fetch_json(url: str, timeout: int = 12) -> dict:
 
 
 def load_local_sector_data() -> dict:
-    path = Path(DATA_FILE)
-    if not path.exists():
+    if not DATA_FILE.exists():
         return {}
     try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
-        if isinstance(payload, dict):
-            return payload.get("sectors", payload)
-    except Exception:
-        pass
-    return {}
+        payload = json.loads(DATA_FILE.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        st.sidebar.warning(f"Error leyendo {DATA_FILE.name}: {exc}")
+        return {}
+    return normalize_sector_payload(payload)
 
 
 def merge_sector_data(base: dict, source: dict) -> dict:
+    if not isinstance(base, dict):
+        return {}
+    if not isinstance(source, dict):
+        return base.copy()
+
     merged = {}
     for sector, base_data in base.items():
-        merged[sector] = base_data.copy()
-        if sector not in source:
+        if not isinstance(base_data, dict):
             continue
 
-        source_data = source[sector]
-        if isinstance(source_data, dict):
-            merged[sector].update({k: v for k, v in source_data.items() if k != "companies"})
-            if isinstance(source_data.get("companies"), list):
-                live_companies = {c["name"]: c for c in source_data["companies"] if isinstance(c, dict) and c.get("name")}
-                merged_companies = []
-                for company in base_data["companies"]:
-                    match = live_companies.get(company["name"])
-                    merged_companies.append({**company, **match} if match else company)
-                for company in source_data["companies"]:
-                    if company.get("name") not in live_companies:
-                        merged_companies.append(company)
-                merged[sector]["companies"] = merged_companies
+        merged[sector] = base_data.copy()
+        source_data = source.get(sector)
+        if not isinstance(source_data, dict):
+            continue
+
+        merged[sector].update({k: v for k, v in source_data.items() if k != "companies"})
+
+        source_companies = [c for c in source_data.get("companies", []) if isinstance(c, dict)]
+        base_companies = [c for c in base_data.get("companies", []) if isinstance(c, dict)]
+        if source_companies:
+            merged_companies = []
+            merged_names = set()
+            for company in base_companies:
+                name = company.get("name")
+                if name and name in {c["name"] for c in source_companies if c.get("name")}:
+                    match = next((c for c in source_companies if c.get("name") == name), None)
+                    if match:
+                        merged_company = {**company, **match}
+                    else:
+                        merged_company = company
+                else:
+                    merged_company = company
+                merged_companies.append(merged_company)
+                if name:
+                    merged_names.add(name)
+
+            for company in source_companies:
+                name = company.get("name")
+                if name and name not in merged_names:
+                    merged_companies.append(company)
+
+            merged[sector]["companies"] = merged_companies
+        elif base_companies:
+            merged[sector]["companies"] = base_companies
+
     return merged
 
 
@@ -244,14 +325,16 @@ def load_sector_data(base_data: dict) -> dict:
     if DATA_FEED_URL:
         try:
             payload = fetch_json(DATA_FEED_URL)
-            if isinstance(payload, dict):
-                live_data = payload.get("sectors", payload)
+            live_data = normalize_sector_payload(payload)
+            if not live_data:
+                raise ValueError("Formato de datos en vivo no válido")
         except Exception as exc:
             st.sidebar.warning(f"No se pudieron cargar datos en vivo: {exc}")
+            live_data = {}
 
     local_data = load_local_sector_data()
-    if isinstance(local_data, dict) and local_data:
-        live_data = merge_sector_data(live_data or {}, local_data)
+    if local_data:
+        live_data = merge_sector_data(live_data, local_data) if live_data else local_data
 
     return merge_sector_data(base_data, live_data) if live_data else base_data
 

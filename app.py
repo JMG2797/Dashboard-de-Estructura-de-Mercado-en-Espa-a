@@ -29,7 +29,7 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
-# Personaliza el tema de colores editando el diccionario DEFAULT_THEME. Puedes cambiar los valores hexadecimales para adaptar la apariencia a tu gusto.
+
 DEFAULT_THEME = {
     "header_start": "#0f172a",
     "header_mid": "#1e293b",
@@ -43,8 +43,6 @@ DEFAULT_THEME = {
     "highlight_color": "#60a5fa",
     "metric_value_color": "#f1f5f9",
 }
-
-# Personaliza los colores directamente en el código editando DEFAULT_THEME.
 
 DARK_THEME = {
     "header_start": "#111827",
@@ -222,8 +220,8 @@ def format_last_refresh() -> str:
 
 def refresh_controls(container):
     init_refresh_state()
-    container.markdown("#### 🔄")
-    if container.button("Actualiza Datos"):
+    container.markdown("####")
+    if container.button("Actualizar Datos"):
         st.session_state.last_refresh_ts = time.time()
         st.rerun()
 
